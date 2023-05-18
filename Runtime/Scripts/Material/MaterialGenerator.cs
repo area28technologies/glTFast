@@ -136,6 +136,8 @@ namespace GLTFast.Materials
         public static readonly int NormalTextureTexCoordProperty = Shader.PropertyToID("normalTexture_texCoord");
         /// <summary>Shader property ID for property normalTexture_scale</summary>
         public static readonly int NormalTextureScaleProperty = Shader.PropertyToID("normalTexture_scale");
+        /// <summary>Shader property ID for property _MainTex</summary>
+        public static readonly int MainTex = Shader.PropertyToID("_MainTex");
         /// <summary>Shader property ID for property metallicFactor</summary>
         public static readonly int MetallicProperty = Shader.PropertyToID("metallicFactor");
         /// <summary>Shader property ID for property metallicRoughnessTexture</summary>

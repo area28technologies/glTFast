@@ -87,8 +87,20 @@ namespace GLTFast.Export
             {
                 m_Writer.AddScene(rootNodes.ToArray(), name);
             }
+            ExportSkyboxMaterial();
 
             return success;
+        }
+
+        void ExportSkyboxMaterial()
+        {
+            Material skyboxMaterial = new Material(RenderSettings.skybox);
+            if (skyboxMaterial == null)
+                return;
+
+            skyboxMaterial.name = "Skybox";
+            m_Writer.AddMaterial(
+                skyboxMaterial, out int skyboxMaterialId, m_MaterialExport);
         }
 
         /// <summary>

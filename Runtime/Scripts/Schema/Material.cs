@@ -54,6 +54,32 @@ namespace GLTFast.Schema
         }
 
         /// <summary>
+        /// The material's skybox mode enumeration specifying the type of skybox
+        /// and usage of the attached texture(s)
+        /// </summary>
+        public enum SkyboxMode
+        {
+            /// <summary>
+            /// In 6-sided mode, 6 textures are provided to form the cube map.
+            /// </summary>
+            SixSided,
+
+            /// <summary>
+            /// In cube map mode, a single equi-rectangular texture is used
+            /// to create the cube map. This mode is combined with Unity's
+            /// Panoramic skybox, since the texture usage is the same.
+            /// </summary>
+            CubeMap,
+
+            /// <summary>
+            /// Procedural skyboxes are created with code rather than textures,
+            /// so the relevant properties are specified for skybox replication
+            /// upon import.
+            /// </summary>
+            Procedural
+        }
+
+        /// <summary>
         /// Material extensions.
         /// </summary>
         public MaterialExtension extensions;
@@ -165,6 +191,50 @@ namespace GLTFast.Schema
             }
         }
 
+        [System.Serializable]
+        public struct Extras
+        {
+            public SkyboxData skyboxData;
+
+            public Extras(SkyboxData skyboxData)
+            {
+                this.skyboxData = skyboxData;
+            }
+
+            public override string ToString()
+            {
+                return JsonUtility.ToJson(this);
+            }
+        }
+
+        /// <summary>
+        /// Structure to store skybox material properties
+        /// </summary>
+        [System.Serializable]
+        public struct SkyboxData
+        {
+            public bool isSkybox;
+            public SkyboxMode skyboxMode;
+
+            // Cube map and Panoramic properties
+            public Color skyTint;
+            public float exposure;
+            public float rotation;
+
+            // Procedural skybox properties
+            public float sunSize;
+            public float sunSizeConvergence;
+            public float atmosphereThickness;
+            public Color ground;
+
+            public override string ToString()
+            {
+                return JsonUtility.ToJson(this);
+            }
+        };
+
+        public Extras extras;
+
         /// <summary>
         /// Specifies the cutoff threshold when in `MASK` mode. If the alpha value is greater than
         /// or equal to this value then it is rendered as fully opaque, otherwise, it is rendered
@@ -234,6 +304,10 @@ namespace GLTFast.Schema
             if (doubleSided)
             {
                 writer.AddProperty("doubleSided", doubleSided);
+            }
+            if (extras.skyboxData.isSkybox)
+            {
+                writer.AddProperty("extras", extras);
             }
             if (extensions != null)
             {

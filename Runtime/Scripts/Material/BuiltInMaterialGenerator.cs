@@ -261,6 +261,42 @@ namespace GLTFast.Materials
                 shaderMode = StandardShaderMode.Fade;
             }
 
+            Schema.Material.SkyboxData skyboxData = gltfMaterial.extras.skyboxData;
+            if (skyboxData.isSkybox)
+            {
+                switch (skyboxData.skyboxMode)
+                {
+                    case Schema.Material.SkyboxMode.CubeMap:
+                        material.shader = Shader.Find("Skybox/Panoramic");
+                        material.SetColor("_Tint", skyboxData.skyTint);
+                        material.SetFloat("_Exposure", skyboxData.exposure);
+                        material.SetFloat("_Rotation", skyboxData.rotation);
+                        TrySetTexture(
+                            gltfMaterial.pbrMetallicRoughness.baseColorTexture,
+                            material,
+                            gltf,
+                            MainTex,
+                            BaseColorTextureScaleTransformProperty,
+                            BaseColorTextureRotationProperty,
+                            BaseColorTextureTexCoordProperty
+                        );
+                        break;
+                    case Schema.Material.SkyboxMode.Procedural:
+                        material.shader = Shader.Find("Skybox/Procedural");
+                        material.SetColor("_SkyTint", skyboxData.skyTint);
+                        material.SetFloat("_Exposure", skyboxData.exposure);
+                        material.SetFloat("_SunSize", skyboxData.sunSize);
+                        material.SetFloat("_SunSizeConvergence", skyboxData.sunSizeConvergence);
+                        material.SetFloat("_AtmosphereThickness", skyboxData.atmosphereThickness);
+                        material.SetColor("_GroundColor", skyboxData.ground);
+                        break;
+                    default:
+                        Logger?.Warning($"{skyboxData.skyboxMode} skybox mode not supported. Skipping import.");
+                        return null;
+                }
+                RenderSettings.skybox = material;
+            }
+
             if (gltfMaterial.extensions != null)
             {
                 // Specular glossiness

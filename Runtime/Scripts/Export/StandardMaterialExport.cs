@@ -51,6 +51,8 @@ namespace GLTFast.Export
         static readonly int k_MetallicGlossMap = Shader.PropertyToID("_MetallicGlossMap");
         static readonly int k_Glossiness = Shader.PropertyToID("_Glossiness");
         static readonly int k_GlossMapScale = Shader.PropertyToID("_GlossMapScale");
+        static readonly int k_Tex = Shader.PropertyToID("_Tex");
+        static readonly int k_MainTex = Shader.PropertyToID("_MainTex");
 
         /// <summary>
         /// Converts a Unity material to a glTF material.
@@ -75,6 +77,54 @@ namespace GLTFast.Export
 
             SetAlphaModeAndCutoff(uMaterial, material);
             material.doubleSided = IsDoubleSided(uMaterial, k_Cull);
+            string skyboxShader = uMaterial.shader.name;
+
+            material.extras.skyboxData.isSkybox = skyboxShader.StartsWith("Skybox/");
+            if (material.extras.skyboxData.isSkybox)
+            {
+                switch (skyboxShader)
+                {
+                    case "Skybox/6Sided":
+                        // TODO 6-sided texture export not yet implemented
+                        material.extras.skyboxData.skyboxMode =
+                            Material.SkyboxMode.SixSided;
+                        break;
+                    case "Skybox/Cubemap":
+                        material.extras.skyboxData.skyboxMode =
+                            Material.SkyboxMode.CubeMap;
+                        material.extras.skyboxData.skyTint = uMaterial.GetColor("_Tint");
+                        material.extras.skyboxData.exposure = uMaterial.GetFloat("_Exposure");
+                        material.extras.skyboxData.rotation = uMaterial.GetFloat("_Rotation") + 90f;
+
+                        // Convert texture type to Texture2D
+                        string url = UnityEditor.AssetDatabase.GetAssetPath(
+                            uMaterial.GetTexture(k_Tex));
+                        Texture2D tex = new Texture2D(2, 2);
+                        tex.LoadImage(System.IO.File.ReadAllBytes(url));
+                        uMaterial.mainTexture = tex;
+
+                        ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
+                        break;
+                    case "Skybox/Panoramic":
+                        material.extras.skyboxData.skyboxMode =
+                            Material.SkyboxMode.CubeMap;
+                        material.extras.skyboxData.skyTint = uMaterial.GetColor("_Tint");
+                        material.extras.skyboxData.exposure = uMaterial.GetFloat("_Exposure");
+                        material.extras.skyboxData.rotation = uMaterial.GetFloat("_Rotation");
+                        ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
+                        break;
+                    case "Skybox/Procedural":
+                        material.extras.skyboxData.skyboxMode =
+                            Material.SkyboxMode.Procedural;
+                        material.extras.skyboxData.skyTint = uMaterial.GetColor("_SkyTint");
+                        material.extras.skyboxData.exposure = uMaterial.GetFloat("_Exposure");
+                        material.extras.skyboxData.sunSize = uMaterial.GetFloat("_SunSize");
+                        material.extras.skyboxData.sunSizeConvergence = uMaterial.GetFloat("_SunSizeConvergence");
+                        material.extras.skyboxData.atmosphereThickness = uMaterial.GetFloat("_AtmosphereThickness");
+                        material.extras.skyboxData.ground = uMaterial.GetColor("_GroundColor");
+                        break;
+                }
+            }
 
             if (uMaterial.IsKeywordEnabled(k_KeywordEmission))
             {

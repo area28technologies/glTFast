@@ -95,14 +95,14 @@ namespace GLTFast.Export
                         material.extras.skyboxData.skyTint = uMaterial.GetColor("_Tint");
                         material.extras.skyboxData.exposure = uMaterial.GetFloat("_Exposure");
                         material.extras.skyboxData.rotation = uMaterial.GetFloat("_Rotation") + 90f;
-
+#if UNITY_EDITOR
                         // Convert texture type to Texture2D
                         string url = UnityEditor.AssetDatabase.GetAssetPath(
                             uMaterial.GetTexture(k_Tex));
                         Texture2D tex = new Texture2D(2, 2);
                         tex.LoadImage(System.IO.File.ReadAllBytes(url));
                         uMaterial.mainTexture = tex;
-
+#endif
                         ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
                         break;
                     case "Skybox/Panoramic":

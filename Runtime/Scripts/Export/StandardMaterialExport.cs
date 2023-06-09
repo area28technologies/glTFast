@@ -84,10 +84,18 @@ namespace GLTFast.Export
             {
                 switch (skyboxShader)
                 {
-                    case "Skybox/6Sided":
-                        // TODO 6-sided texture export not yet implemented
+                    case "Skybox/6 Sided":
                         material.extras.skyboxData.skyboxMode =
                             Material.SkyboxMode.SixSided;
+                        material.extras.skyboxData.skyTint = uMaterial.GetColor("_Tint");
+                        material.extras.skyboxData.exposure = uMaterial.GetFloat("_Exposure");
+                        material.extras.skyboxData.rotation = uMaterial.GetFloat("_Rotation");
+                        material.extras.skyboxData.frontTex = ExportTextureInfo(uMaterial, "_FrontTex", gltf);
+                        material.extras.skyboxData.backTex = ExportTextureInfo(uMaterial, "_BackTex", gltf);
+                        material.extras.skyboxData.leftTex = ExportTextureInfo(uMaterial, "_LeftTex", gltf);
+                        material.extras.skyboxData.rightTex = ExportTextureInfo(uMaterial, "_RightTex", gltf);
+                        material.extras.skyboxData.upTex = ExportTextureInfo(uMaterial, "_UpTex", gltf);
+                        material.extras.skyboxData.downTex = ExportTextureInfo(uMaterial, "_DownTex", gltf);
                         break;
                     case "Skybox/Cubemap":
                         material.extras.skyboxData.skyboxMode =
@@ -323,6 +331,13 @@ namespace GLTFast.Export
             }
 
             return success;
+        }
+
+        int ExportTextureInfo(UnityEngine.Material material, string textureName, IGltfWritable gltf)
+        {
+            Texture2D tempTex = (Texture2D)material.GetTexture(textureName);
+            TextureInfo texInfo = ExportTextureInfo(tempTex, gltf);
+            return texInfo.index;
         }
 
         static bool IsPbrMetallicRoughness(UnityEngine.Material material)

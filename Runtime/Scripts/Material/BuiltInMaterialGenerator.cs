@@ -290,6 +290,18 @@ namespace GLTFast.Materials
                         material.SetFloat("_AtmosphereThickness", skyboxData.atmosphereThickness);
                         material.SetColor("_GroundColor", skyboxData.ground);
                         break;
+                    case Schema.Material.SkyboxMode.SixSided:
+                        material.shader = Shader.Find("Skybox/6 Sided");
+                        material.SetColor("_Tint", skyboxData.skyTint);
+                        material.SetFloat("_Exposure", skyboxData.exposure);
+                        material.SetFloat("_Rotation", skyboxData.rotation);
+                        material.SetTexture("_FrontTex", gltf.GetTexture(skyboxData.frontTex));
+                        material.SetTexture("_BackTex", gltf.GetTexture(skyboxData.backTex));
+                        material.SetTexture("_LeftTex", gltf.GetTexture(skyboxData.leftTex));
+                        material.SetTexture("_RightTex", gltf.GetTexture(skyboxData.rightTex));
+                        material.SetTexture("_UpTex", gltf.GetTexture(skyboxData.upTex));
+                        material.SetTexture("_DownTex", gltf.GetTexture(skyboxData.downTex));
+                        break;
                     default:
                         Logger?.Warning($"{skyboxData.skyboxMode} skybox mode not supported. Skipping import.");
                         return null;

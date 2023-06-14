@@ -227,6 +227,14 @@ namespace GLTFast.Schema
             public float atmosphereThickness;
             public Color ground;
 
+            // 6-sided cube map textures
+            public int frontTex;
+            public int backTex;
+            public int leftTex;
+            public int rightTex;
+            public int upTex;
+            public int downTex;
+
             public override string ToString()
             {
                 return JsonUtility.ToJson(this);

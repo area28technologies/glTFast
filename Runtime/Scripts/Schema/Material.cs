@@ -195,11 +195,60 @@ namespace GLTFast.Schema
         public struct Extras
         {
             public SkyboxData skyboxData;
+            public ParticlesUnlitData particlesUnlitData;
 
-            public Extras(SkyboxData skyboxData)
+            public override string ToString()
             {
-                this.skyboxData = skyboxData;
+                string json = "{";
+                if (skyboxData.isSkybox)
+                {
+                    json += $"\"skyboxData\":{skyboxData.ToString()},";
+                }
+                if (particlesUnlitData.isParticlesUnlit)
+                {
+                    json += $"\"particlesUnlitData\":{particlesUnlitData.ToString()}";
+                }
+                json = json.Trim(',') + "}";
+                return json;
             }
+        }
+
+        /// <summary>
+        /// Structure to store skybox material properties
+        /// </summary>
+        [System.Serializable]
+        public struct ParticlesUnlitData
+        {
+            // TODO: handle textures for bumpMap and emissionMap
+            public bool isParticlesUnlit;
+            public Color color;
+            public float cutoff;
+            public float bumpScale;
+            public Color emissionColor;
+            public float distortionStrength;
+            public float distortionBlend;
+            public float softParticlesNearFadeDistance;
+            public float softParticlesFarFadeDistance;
+            public float cameraNearFadeDistance;
+            public float cameraFarFadeDistance;
+
+            public float mode;
+            public float colorMode;
+            public float flipbookMode;
+            public float lightingEnabled;
+            public float distortionEnabled;
+            public float emissionEnabled;
+            public float blendOp;
+            public float srcBlend;
+            public float dstBlend;
+            public float zWrite;
+            public float cull;
+            public float softParticlesEnabled;
+            public float cameraFadingEnabled;
+            public Vector4 softParticleFadeParams;
+            public Vector4 cameraFadeParams;
+            public Vector4 colorAddSubDiff;
+            public float distortionStrengthScaled;
 
             public override string ToString()
             {
@@ -313,7 +362,7 @@ namespace GLTFast.Schema
             {
                 writer.AddProperty("doubleSided", doubleSided);
             }
-            if (extras.skyboxData.isSkybox)
+            if (extras.skyboxData.isSkybox || extras.particlesUnlitData.isParticlesUnlit)
             {
                 writer.AddProperty("extras", extras);
             }

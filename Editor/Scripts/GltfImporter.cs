@@ -162,9 +162,11 @@ namespace GLTFast.Editor
                     var hasAnimation = false;
 #if UNITY_ANIMATION
                     if (importSettings.AnimationMethod != AnimationMethod.None
-                        && (instantiationSettings.Mask & ComponentType.Animation) != 0) {
+                        && (instantiationSettings.Mask & ComponentType.Animation) != 0)
+                    {
                         var animationClips = m_Gltf.GetAnimationClips();
-                        if (animationClips != null && animationClips.Length > 0) {
+                        if (animationClips != null && animationClips.Length > 0)
+                        {
                             hasAnimation = true;
                         }
                     }
@@ -212,13 +214,12 @@ namespace GLTFast.Editor
                 {
                     var mat = m_Gltf.GetMaterial(i);
 
-                    // Overriding double-sided for GI baking
-                    // Resolves problems with meshes that are not a closed
-                    // volume at a potential minor cost of baking speed.
-                    mat.doubleSidedGI = true;
-
                     if (mat != null)
                     {
+                        // Overriding double-sided for GI baking
+                        // Resolves problems with meshes that are not a closed
+                        // volume at a potential minor cost of baking speed.
+                        mat.doubleSidedGI = true;
                         AddObjectToAsset(ctx, $"materials/{mat.name}", mat);
                     }
                 }
@@ -250,15 +251,19 @@ namespace GLTFast.Editor
 
 #if UNITY_ANIMATION
                 var clips = m_Gltf.GetAnimationClips();
-                if (clips != null) {
-                    foreach (var animationClip in clips) {
-                        if (animationClip == null) {
+                if (clips != null)
+                {
+                    foreach (var animationClip in clips)
+                    {
+                        if (animationClip == null)
+                        {
                             continue;
                         }
-                        if (importSettings.AnimationMethod == AnimationMethod.Mecanim) {
+                        if (importSettings.AnimationMethod == AnimationMethod.Mecanim)
+                        {
                             var settings = AnimationUtility.GetAnimationClipSettings(animationClip);
                             settings.loopTime = true;
-                            AnimationUtility.SetAnimationClipSettings (animationClip, settings);
+                            AnimationUtility.SetAnimationClipSettings(animationClip, settings);
                         }
                         AddObjectToAsset(ctx, $"animations/{animationClip.name}", animationClip);
                     }

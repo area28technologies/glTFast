@@ -123,6 +123,75 @@ namespace GLTFast.Export
         }
 
         /// <summary>
+        /// Retrieves whether material is for a skybox
+        /// </summary>
+        /// <param name="material">Material to analyze</param>
+        /// <returns>True if material uses skybox shader, false otherwise</returns>
+        protected static bool IsSkybox(UnityEngine.Material material)
+        {
+            return material.shader.name.StartsWith("Skybox/");
+        }
+
+        /// <summary>
+        /// Retrieves whether material is unlit
+        /// </summary>
+        /// <param name="material">Material to analyze</param>
+        /// <returns>True if material uses the standard particles unlit shader, false otherwise</returns>
+        protected static bool IsParticlesUnlit(UnityEngine.Material material)
+        {
+            return material.shader.name == "Particles/Standard Unlit";
+        }
+
+        /// <summary>
+        /// Converts an particles unlit Unity material into a glTF material
+        /// </summary>
+        /// <param name="material">Destination glTF material</param>
+        /// <param name="uMaterial">Source Unity material</param>
+        /// <param name="mainTexProperty">Main texture property ID</param>
+        /// <param name="gltf">Context glTF to export to</param>
+        /// <param name="logger">Custom logger</param>
+        protected void ExportParticlesUnlit(
+            Material material,
+            UnityEngine.Material uMaterial,
+            int mainTexProperty,
+            IGltfWritable gltf,
+            ICodeLogger logger
+            )
+        {
+            ExportUnlit(material, uMaterial, mainTexProperty, gltf, logger);
+            var particlesUnlitData = new Material.ParticlesUnlitData { isParticlesUnlit = true };
+
+            particlesUnlitData.color = uMaterial.GetColor("_Color");
+            particlesUnlitData.cutoff = uMaterial.GetFloat("_Cutoff");
+            particlesUnlitData.bumpScale = uMaterial.GetFloat("_BumpScale");
+            particlesUnlitData.emissionColor = uMaterial.GetColor("_EmissionColor");
+            particlesUnlitData.distortionStrength = uMaterial.GetFloat("_DistortionStrength");
+            particlesUnlitData.distortionBlend = uMaterial.GetFloat("_DistortionBlend");
+            particlesUnlitData.softParticlesNearFadeDistance = uMaterial.GetFloat("_SoftParticlesNearFadeDistance");
+            particlesUnlitData.softParticlesFarFadeDistance = uMaterial.GetFloat("_SoftParticlesFarFadeDistance");
+            particlesUnlitData.cameraNearFadeDistance = uMaterial.GetFloat("_CameraNearFadeDistance");
+            particlesUnlitData.cameraFarFadeDistance = uMaterial.GetFloat("_CameraFarFadeDistance");
+            particlesUnlitData.mode = uMaterial.GetFloat("_Mode");
+            particlesUnlitData.colorMode = uMaterial.GetFloat("_ColorMode");
+            particlesUnlitData.flipbookMode = uMaterial.GetFloat("_FlipbookMode");
+            particlesUnlitData.lightingEnabled = uMaterial.GetFloat("_LightingEnabled");
+            particlesUnlitData.distortionEnabled = uMaterial.GetFloat("_DistortionEnabled");
+            particlesUnlitData.emissionEnabled = uMaterial.GetFloat("_EmissionEnabled");
+            particlesUnlitData.blendOp = uMaterial.GetFloat("_BlendOp");
+            particlesUnlitData.srcBlend = uMaterial.GetFloat("_SrcBlend");
+            particlesUnlitData.dstBlend = uMaterial.GetFloat("_DstBlend");
+            particlesUnlitData.zWrite = uMaterial.GetFloat("_ZWrite");
+            particlesUnlitData.cull = uMaterial.GetFloat("_Cull");
+            particlesUnlitData.softParticlesEnabled = uMaterial.GetFloat("_SoftParticlesEnabled");
+            particlesUnlitData.cameraFadingEnabled = uMaterial.GetFloat("_CameraFadingEnabled");
+            particlesUnlitData.softParticleFadeParams = uMaterial.GetVector("_SoftParticleFadeParams");
+            particlesUnlitData.cameraFadeParams = uMaterial.GetVector("_CameraFadeParams");
+            particlesUnlitData.colorAddSubDiff = uMaterial.GetVector("_ColorAddSubDiff");
+            particlesUnlitData.distortionStrengthScaled = uMaterial.GetFloat("_DistortionStrengthScaled");
+            material.extras.particlesUnlitData = particlesUnlitData;
+        }
+
+        /// <summary>
         /// Converts an unlit Unity material into a glTF material
         /// </summary>
         /// <param name="material">Destination glTF material</param>

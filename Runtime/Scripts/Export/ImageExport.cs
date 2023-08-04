@@ -64,8 +64,32 @@ namespace GLTFast.Export
             m_ImageFormat = imageFormat;
 #if UNITY_EDITOR
             m_AssetPath = AssetDatabase.GetAssetPath(texture);
+            var importer = (TextureImporter)TextureImporter.GetAtPath(m_AssetPath);
+            if (importer != null && importer.alphaSource == TextureImporterAlphaSource.FromGrayScale && importer.alphaIsTransparency)
+            {
+                CreateTransparentTexture(texture);
+            }
 #endif
         }
+
+#if UNITY_EDITOR
+        private void CreateTransparentTexture(Texture2D texture)
+        {
+            Texture2D tempTexture = new Texture2D(texture.height, texture.width);
+            ImageConversion.LoadImage(tempTexture, File.ReadAllBytes(m_AssetPath));
+            Color[] pixels = tempTexture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+                pixels[i].a = pixels[i].grayscale;
+            tempTexture.SetPixels(pixels);
+            tempTexture.Apply();
+            m_Texture = tempTexture;
+
+            string filename = Path.GetFileName(m_AssetPath);
+            string tempdir = Directory.GetParent(FileUtil.GetUniqueTempPathInProject()).FullName;
+            m_AssetPath = Path.Join(tempdir, filename);
+            File.WriteAllBytes(m_AssetPath, tempTexture.EncodeToPNG());
+        }
+#endif
 
         /// <summary>
         /// Final export imageFormat
@@ -85,7 +109,8 @@ namespace GLTFast.Export
             get
             {
 #if UNITY_EDITOR
-                if (validAssetPath) {
+                if (validAssetPath)
+                {
                     var nameWithoutExtension = Path.GetFileNameWithoutExtension(m_AssetPath);
                     return $"{nameWithoutExtension}.{FileExtension}";
                 }
@@ -167,7 +192,8 @@ namespace GLTFast.Export
         public override bool Write(string filePath, bool overwrite)
         {
 #if UNITY_EDITOR
-            if (validAssetPath && GetFormatFromExtension(m_AssetPath)==ImageFormat) {
+            if (validAssetPath && GetFormatFromExtension(m_AssetPath) == ImageFormat)
+            {
                 File.Copy(m_AssetPath, filePath, overwrite);
                 return true;
             }
@@ -184,7 +210,8 @@ namespace GLTFast.Export
         public override byte[] GetData()
         {
 #if UNITY_EDITOR
-            if (validAssetPath && GetFormatFromExtension(m_AssetPath)==ImageFormat) {
+            if (validAssetPath && GetFormatFromExtension(m_AssetPath) == ImageFormat)
+            {
                 return File.ReadAllBytes(m_AssetPath);
             }
 #endif
@@ -249,12 +276,15 @@ namespace GLTFast.Export
         }
 
 #if UNITY_EDITOR
-        static ImageFormat GetFormatFromExtension(string assetPath) {
-            if (assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) {
+        static ImageFormat GetFormatFromExtension(string assetPath)
+        {
+            if (assetPath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            {
                 return ImageFormat.Png;
             }
             if (assetPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                assetPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)) {
+                assetPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
+            {
                 return ImageFormat.Jpg;
             }
             return ImageFormat.Unknown;

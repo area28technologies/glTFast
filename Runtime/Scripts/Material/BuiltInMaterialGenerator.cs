@@ -85,6 +85,7 @@ namespace GLTFast.Materials
         Shader m_PbrMetallicRoughnessShader;
         Shader m_PbrSpecularGlossinessShader;
         Shader m_UnlitShader;
+        Shader m_ParticlesUnlitShader;
 
         static bool s_DefaultMaterialGenerated;
         static Material s_DefaultMaterial;
@@ -132,6 +133,15 @@ namespace GLTFast.Materials
 #else
             return FindShader(k_PbrSpecularGlossinessShaderName, Logger);
 #endif
+        }
+
+        /// <summary>
+        /// Finds the shader required for particles unlit materials.
+        /// </summary>
+        /// <returns>Unlit shader</returns>
+        Shader FinderShaderParticlesUnlit()
+        {
+            return FindShader("Particles/Standard Unlit", Logger);
         }
 
         /// <summary>
@@ -191,6 +201,55 @@ namespace GLTFast.Materials
             return mat;
         }
 
+        Material GetParticlesUnlitMaterial(Schema.Material.ParticlesUnlitData particlesUnlitData, bool doubleSided = false)
+        {
+            if (m_ParticlesUnlitShader == null)
+            {
+                m_ParticlesUnlitShader = FinderShaderParticlesUnlit();
+            }
+            if (m_ParticlesUnlitShader == null)
+            {
+                return null;
+            }
+            var mat = new Material(m_ParticlesUnlitShader);
+            if (doubleSided)
+            {
+                // Turn off back-face culling
+                mat.SetFloat(CullModeProperty, 0);
+#if UNITY_EDITOR
+                mat.doubleSidedGI = true;
+#endif
+            }
+            mat.SetColor("_Color", particlesUnlitData.color);
+            mat.SetFloat("_Cutoff", particlesUnlitData.cutoff);
+            mat.SetFloat("_BumpScale", particlesUnlitData.bumpScale);
+            mat.SetColor("_EmissionColor", particlesUnlitData.emissionColor);
+            mat.SetFloat("_DistortionStrength", particlesUnlitData.distortionStrength);
+            mat.SetFloat("_DistortionBlend", particlesUnlitData.distortionBlend);
+            mat.SetFloat("_SoftParticlesNearFadeDistance", particlesUnlitData.softParticlesNearFadeDistance);
+            mat.SetFloat("_SoftParticlesFarFadeDistance", particlesUnlitData.softParticlesFarFadeDistance);
+            mat.SetFloat("_CameraNearFadeDistance", particlesUnlitData.cameraNearFadeDistance);
+            mat.SetFloat("_CameraFarFadeDistance", particlesUnlitData.cameraFarFadeDistance);
+            mat.SetFloat("_Mode", particlesUnlitData.mode);
+            mat.SetFloat("_ColorMode", particlesUnlitData.colorMode);
+            mat.SetFloat("_FlipbookMode", particlesUnlitData.flipbookMode);
+            mat.SetFloat("_LightingEnabled", particlesUnlitData.lightingEnabled);
+            mat.SetFloat("_DistortionEnabled", particlesUnlitData.distortionEnabled);
+            mat.SetFloat("_EmissionEnabled", particlesUnlitData.emissionEnabled);
+            mat.SetFloat("_BlendOp", particlesUnlitData.blendOp);
+            mat.SetFloat("_SrcBlend", particlesUnlitData.srcBlend);
+            mat.SetFloat("_DstBlend", particlesUnlitData.dstBlend);
+            mat.SetFloat("_ZWrite", particlesUnlitData.zWrite);
+            mat.SetFloat("_Cull", particlesUnlitData.cull);
+            mat.SetFloat("_SoftParticlesEnabled", particlesUnlitData.softParticlesEnabled);
+            mat.SetFloat("_CameraFadingEnabled", particlesUnlitData.cameraFadingEnabled);
+            mat.SetVector("_SoftParticleFadeParams", particlesUnlitData.softParticleFadeParams);
+            mat.SetVector("_CameraFadeParams", particlesUnlitData.cameraFadeParams);
+            mat.SetVector("_ColorAddSubDiff", particlesUnlitData.colorAddSubDiff);
+            mat.SetFloat("_DistortionStrengthScaled", particlesUnlitData.distortionStrengthScaled);
+            return mat;
+        }
+
         Material GetUnlitMaterial(bool doubleSided = false)
         {
             if (m_UnlitShader == null)
@@ -223,13 +282,23 @@ namespace GLTFast.Materials
             Material material;
 
             var isUnlit = gltfMaterial.extensions?.KHR_materials_unlit != null;
+            bool IsParticlesUnlit = gltfMaterial.extras.particlesUnlitData.isParticlesUnlit;
 
             if (gltfMaterial.extensions?.KHR_materials_pbrSpecularGlossiness != null)
             {
                 material = GetPbrSpecularGlossinessMaterial(gltfMaterial.doubleSided);
             }
-            else
-            if (isUnlit)
+            else if (IsParticlesUnlit)
+            {
+                material = GetParticlesUnlitMaterial(gltfMaterial.extras.particlesUnlitData, gltfMaterial.doubleSided);
+                TrySetTexture(
+                    gltfMaterial.pbrMetallicRoughness.baseColorTexture,
+                    material,
+                    gltf,
+                    Shader.PropertyToID("_MainTex")
+                    );
+            }
+            else if (isUnlit)
             {
                 material = GetUnlitMaterial(gltfMaterial.doubleSided);
             }

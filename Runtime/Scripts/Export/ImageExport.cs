@@ -86,7 +86,7 @@ namespace GLTFast.Export
 
             string filename = Path.GetFileName(m_AssetPath);
             string tempdir = Directory.GetParent(FileUtil.GetUniqueTempPathInProject()).FullName;
-            m_AssetPath = Path.Join(tempdir, filename);
+            m_AssetPath = Path.Combine(tempdir, filename);
             File.WriteAllBytes(m_AssetPath, tempTexture.EncodeToPNG());
         }
 #endif

@@ -14,6 +14,7 @@
 //
 
 using System.Collections.Generic;
+using GLTFast.Schema;
 using UnityEngine;
 
 namespace GLTFast
@@ -54,8 +55,9 @@ namespace GLTFast
         public override void AddPrimitive(
             uint nodeIndex,
             string meshName,
-            Mesh mesh,
+            UnityEngine.Mesh mesh,
             int[] materialIndices,
+            MeshExtras.ShadowData shadowData,
             uint[] joints = null,
             uint? rootJoint = null,
             float[] morphTargetWeights = null,
@@ -67,6 +69,7 @@ namespace GLTFast
                 meshName,
                 mesh,
                 materialIndices,
+                shadowData,
                 joints,
                 rootJoint,
                 morphTargetWeights,

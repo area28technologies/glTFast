@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 
+using GLTFast.Schema;
 using Unity.Collections;
 using UnityEngine;
 
@@ -90,8 +91,9 @@ namespace GLTFast
         void AddPrimitive(
             uint nodeIndex,
             string meshName,
-            Mesh mesh,
+            UnityEngine.Mesh mesh,
             int[] materialIndices,
+            MeshExtras.ShadowData shadowData,
             uint[] joints = null,
             uint? rootJoint = null,
             float[] morphTargetWeights = null,
@@ -115,12 +117,13 @@ namespace GLTFast
         void AddPrimitiveInstanced(
             uint nodeIndex,
             string meshName,
-            Mesh mesh,
+            UnityEngine.Mesh mesh,
             int[] materialIndices,
             uint instanceCount,
             NativeArray<Vector3>? positions,
             NativeArray<Quaternion>? rotations,
             NativeArray<Vector3>? scales,
+            MeshExtras.ShadowData shadowData,
             int primitiveNumeration = 0
         );
 

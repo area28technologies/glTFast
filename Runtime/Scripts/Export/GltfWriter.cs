@@ -163,7 +163,8 @@ namespace GLTFast.Export
         }
 
         /// <inheritdoc />
-        public void AddMeshToNode(int nodeId, UnityEngine.Mesh uMesh, int[] materialIds)
+        public void AddMeshToNode(int nodeId, UnityEngine.Mesh uMesh,
+            int[] materialIds, MeshExtras.ShadowData shadowData)
         {
             if ((m_Settings.ComponentMask & ComponentType.Mesh) == 0) return;
             CertifyNotDisposed();
@@ -175,7 +176,7 @@ namespace GLTFast.Export
                 m_NodeMaterials[nodeId] = materialIds;
             }
 
-            node.mesh = AddMesh(uMesh);
+            node.mesh = AddMesh(uMesh, shadowData);
         }
 
         /// <inheritdoc />
@@ -341,6 +342,11 @@ namespace GLTFast.Export
             }
 
             light.intensity *= m_Settings.LightIntensityFactor;
+            light.extras.shadowData.shadowType = (int)uLight.shadows;
+            light.extras.shadowData.shadowStrength = uLight.shadowStrength;
+            light.extras.shadowData.shadowBias = uLight.shadowBias;
+            light.extras.shadowData.shadowNormalBias = uLight.shadowNormalBias;
+            light.extras.shadowData.shadowNearPlane = uLight.shadowNearPlane;
 
             if (m_Lights == null)
             {
@@ -392,10 +398,22 @@ namespace GLTFast.Export
         {
             CertifyNotDisposed();
             m_Scenes = m_Scenes ?? new List<Scene>();
+            Scene.LightSettings lightSettings = new Scene.LightSettings() {
+                ambientMode = (int)RenderSettings.ambientMode,
+                intensityMultiplier = RenderSettings.ambientIntensity,
+                skyColour = RenderSettings.ambientSkyColor,
+                equatorColour = RenderSettings.ambientEquatorColor,
+                groundColour = RenderSettings.ambientGroundColor,
+                ambientColour = RenderSettings.ambientLight
+            };
+            Scene.Extras extras =
+                new Scene.Extras() { lightSettings = lightSettings };
+
             var scene = new Scene
             {
                 name = name,
-                nodes = nodes
+                nodes = nodes,
+                extras = extras
             };
             m_Scenes.Add(scene);
             if (m_Scenes.Count == 1)
@@ -1918,7 +1936,7 @@ namespace GLTFast.Export
             return node;
         }
 
-        int AddMesh(UnityEngine.Mesh uMesh)
+        int AddMesh(UnityEngine.Mesh uMesh, MeshExtras.ShadowData shadowData)
         {
             int meshId;
 
@@ -1943,6 +1961,10 @@ namespace GLTFast.Export
             {
                 name = uMesh.name
             };
+
+            if (mesh.extras == null)
+                mesh.extras = new MeshExtras();
+            mesh.extras.shadowData = shadowData;
             m_Meshes = m_Meshes ?? new List<Mesh>();
             m_UnityMeshes = m_UnityMeshes ?? new List<UnityEngine.Mesh>();
             m_Meshes.Add(mesh);

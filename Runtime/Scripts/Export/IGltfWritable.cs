@@ -15,8 +15,12 @@
 
 using System.IO;
 using System.Threading.Tasks;
+using GLTFast.Schema;
 using Unity.Mathematics;
 using UnityEngine;
+using Camera = UnityEngine.Camera;
+using Material = UnityEngine.Material;
+using Mesh = UnityEngine.Mesh;
 
 namespace GLTFast.Export
 {
@@ -53,7 +57,7 @@ namespace GLTFast.Export
         /// <param name="uMesh">Unity mesh to be assigned and exported</param>
         /// <param name="materialIds">glTF materials IDs to be assigned
         /// (multiple in case of sub-meshes)</param>
-        void AddMeshToNode(int nodeId, Mesh uMesh, int[] materialIds);
+        void AddMeshToNode(int nodeId, Mesh uMesh, int[] materialIds, MeshExtras.ShadowData shadowData);
 
         /// <summary>
         /// Assigns a camera to a previously added node

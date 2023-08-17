@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 
+using UnityEngine;
+
 namespace GLTFast.Schema
 {
 
@@ -28,11 +30,37 @@ namespace GLTFast.Schema
         /// </summary>
         public uint[] nodes;
 
+        public Extras extras;
+
+        [System.Serializable]
+        public struct Extras
+        {
+            public LightSettings lightSettings;
+
+            public override string ToString()
+            {
+                return JsonUtility.ToJson(this);
+            }
+        }
+
+        [System.Serializable]
+        public struct LightSettings
+        {
+            public int ambientMode;
+            public float intensityMultiplier;
+            public Vector4 skyColour;
+            public Vector4 equatorColour;
+            public Vector4 groundColour;
+            public Vector4 ambientColour;
+        }
+
         internal void GltfSerialize(JsonWriter writer)
         {
             writer.AddObject();
             GltfSerializeRoot(writer);
             writer.AddArrayProperty("nodes", nodes);
+            writer.AddProperty("extras", extras);
+
             writer.Close();
         }
     }

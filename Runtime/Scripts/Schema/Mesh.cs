@@ -14,6 +14,7 @@
 //
 
 using System;
+using UnityEngine;
 
 namespace GLTFast.Schema
 {
@@ -82,6 +83,7 @@ namespace GLTFast.Schema
             if (extras != null)
             {
                 writer.AddProperty("extras");
+                writer.AddObject();
                 extras.GltfSerialize(writer);
                 writer.Close();
             }
@@ -95,11 +97,24 @@ namespace GLTFast.Schema
     [Serializable]
     public class MeshExtras
     {
-
         /// <summary>
         /// Morph targets' names
         /// </summary>
         public string[] targetNames;
+
+        public ShadowData shadowData;
+
+        [Serializable]
+        public struct ShadowData
+        {
+            public int shadowCastingMode;
+            public bool receiveShadows;
+
+            public override string ToString()
+            {
+                return JsonUtility.ToJson(this);
+            }
+        }
 
         internal void GltfSerialize(JsonWriter writer)
         {
@@ -107,6 +122,8 @@ namespace GLTFast.Schema
             {
                 writer.AddArrayProperty("targetNames", targetNames);
             }
+
+            writer.AddProperty("shadowData", shadowData);
         }
     }
 }

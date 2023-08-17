@@ -17,6 +17,7 @@ using System;
 
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace GLTFast.Export
 {
@@ -363,6 +364,7 @@ namespace GLTFast.Export
             var pbr = new PbrMetallicRoughness { metallicFactor = 0, roughnessFactor = 1.0f };
 
             var hasAlphaSmoothness = uMaterial.IsKeywordEnabled(k_KeywordSmoothnessTextureAlbedoChannelA);
+            bool hasAlbedoAlpha = false;
 
             if (uMaterial.HasProperty(BaseColorProperty))
             {
@@ -395,6 +397,7 @@ namespace GLTFast.Export
 
                 if (mainTex)
                 {
+                    hasAlbedoAlpha = GraphicsFormatUtility.HasAlphaChannel(mainTex.graphicsFormat);
                     if (mainTex is Texture2D)
                     {
                         pbr.baseColorTexture = ExportTextureInfo(
@@ -429,9 +432,18 @@ namespace GLTFast.Export
                 var smoothnessPropId = uMaterial.HasProperty(SmoothnessProperty) ? SmoothnessProperty : k_Glossiness;
                 var metallicGlossMap = uMaterial.HasProperty(k_MetallicGlossMap) ? uMaterial.GetTexture(k_MetallicGlossMap) : null;
                 var smoothness = uMaterial.GetFloat(smoothnessPropId);
+                bool hasMetallicAlpha = false;
+                if (metallicGlossMap)
+                    hasMetallicAlpha = GraphicsFormatUtility.HasAlphaChannel(metallicGlossMap.graphicsFormat);
                 pbr.roughnessFactor = (metallicGlossMap != null || hasAlphaSmoothness) && uMaterial.HasProperty(k_GlossMapScale)
                     ? uMaterial.GetFloat(k_GlossMapScale)
                     : 1f - smoothness;
+                // Special case - with no smoothness alpha channels, gloss factor is used
+                if (metallicGlossMap && uMaterial.HasProperty(k_GlossMapScale) &&
+                    (!hasMetallicAlpha || (hasAlphaSmoothness && !hasAlbedoAlpha)))
+                {
+                    pbr.roughnessFactor = 1f - uMaterial.GetFloat(k_GlossMapScale);
+                }
             }
 
             if (uMaterial.HasProperty(k_MetallicGlossMap))

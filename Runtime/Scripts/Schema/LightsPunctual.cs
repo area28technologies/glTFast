@@ -123,6 +123,29 @@ namespace GLTFast.Schema
         [NonSerialized]
         Type m_TypeEnum = Type.Unknown;
 
+        public Extras extras;
+
+        [Serializable]
+        public struct Extras
+        {
+            public ShadowData shadowData;
+
+            public override string ToString()
+            {
+                return JsonUtility.ToJson(this);
+            }
+        }
+
+        [Serializable]
+        public struct ShadowData
+        {
+            public int shadowType;
+            public float shadowStrength;
+            public float shadowBias;
+            public float shadowNormalBias;
+            public float shadowNearPlane;
+        }
+
         /// <summary>
         /// Returns the type of the light
         /// It converts the <see cref="type"/> string and caches it.
@@ -180,6 +203,8 @@ namespace GLTFast.Schema
                 writer.AddProperty("spot");
                 spot.GltfSerialize(writer);
             }
+            writer.AddProperty("extras", extras);
+
             writer.Close();
         }
 

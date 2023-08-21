@@ -70,6 +70,13 @@ namespace GLTFast
                 lightDestination.spotAngle = lightSource.spot.outerConeAngle * Mathf.Rad2Deg * 2f;
                 lightDestination.innerSpotAngle = lightSource.spot.innerConeAngle * Mathf.Rad2Deg * 2f;
             }
+
+            LightPunctual.ShadowData shadowData = lightSource.extras.shadowData;
+            lightDestination.shadows = (LightShadows)shadowData.shadowType;
+            lightDestination.shadowStrength = shadowData.shadowStrength;
+            lightDestination.shadowBias = shadowData.shadowBias;
+            lightDestination.shadowNormalBias = shadowData.shadowNormalBias;
+            lightDestination.shadowNearPlane = shadowData.shadowNearPlane;
         }
 
         /// <summary>

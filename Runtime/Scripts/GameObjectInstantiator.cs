@@ -23,6 +23,7 @@ using Camera = UnityEngine.Camera;
 using Material = UnityEngine.Material;
 using Mesh = UnityEngine.Mesh;
 using A28;
+using UnityEngine.Rendering;
 
 // #if UNITY_EDITOR && UNITY_ANIMATION
 // using UnityEditor.Animations;
@@ -230,6 +231,7 @@ namespace GLTFast
             string meshName,
             Mesh mesh,
             int[] materialIndices,
+            MeshExtras.ShadowData shadowData,
             uint[] joints = null,
             uint? rootJoint = null,
             float[] morphTargetWeights = null,
@@ -302,6 +304,10 @@ namespace GLTFast
             }
 
             renderer.sharedMaterials = materials;
+
+            renderer.shadowCastingMode =
+                (ShadowCastingMode)shadowData.shadowCastingMode;
+            renderer.receiveShadows = shadowData.receiveShadows;
         }
 
         /// <inheritdoc />
@@ -314,6 +320,7 @@ namespace GLTFast
             NativeArray<Vector3>? positions,
             NativeArray<Quaternion>? rotations,
             NativeArray<Vector3>? scales,
+            MeshExtras.ShadowData shadowData,
             int primitiveNumeration = 0
         )
         {
@@ -344,6 +351,9 @@ namespace GLTFast
                 mf.mesh = mesh;
                 Renderer renderer = meshGo.AddComponent<MeshRenderer>();
                 renderer.sharedMaterials = materials;
+                renderer.shadowCastingMode =
+                    (ShadowCastingMode)shadowData.shadowCastingMode;
+                renderer.receiveShadows = shadowData.receiveShadows;
             }
         }
 

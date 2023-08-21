@@ -18,7 +18,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using GLTFast.Schema;
 using UnityEngine;
+using Camera = UnityEngine.Camera;
+using Material = UnityEngine.Material;
+using Mesh = UnityEngine.Mesh;
 
 namespace GLTFast.Export
 {
@@ -212,6 +216,7 @@ namespace GLTFast.Export
         {
             tempMaterials.Clear();
             Mesh mesh = null;
+            Renderer meshRenderer = null;
             if (gameObject.TryGetComponent(out MeshFilter meshFilter))
             {
                 if (gameObject.TryGetComponent(out Renderer renderer))
@@ -220,6 +225,7 @@ namespace GLTFast.Export
                     {
                         mesh = meshFilter.sharedMesh;
                         renderer.GetSharedMaterials(tempMaterials);
+                        meshRenderer = renderer;
                     }
                 }
             }
@@ -230,6 +236,7 @@ namespace GLTFast.Export
                 {
                     mesh = smr.sharedMesh;
                     smr.GetSharedMaterials(tempMaterials);
+                    meshRenderer = smr;
                 }
             }
 
@@ -249,7 +256,14 @@ namespace GLTFast.Export
 
             if (mesh != null)
             {
-                m_Writer.AddMeshToNode(nodeId, mesh, materialIds);
+                MeshExtras.ShadowData shadowData = new MeshExtras.ShadowData();
+                if (meshRenderer)
+                {
+                    shadowData.shadowCastingMode = (int)meshRenderer.shadowCastingMode;
+                    shadowData.receiveShadows = meshRenderer.receiveShadows;
+                }
+
+                m_Writer.AddMeshToNode(nodeId, mesh, materialIds, shadowData);
             }
 
             if (gameObject.TryGetComponent(out Camera camera))

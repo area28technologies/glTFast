@@ -201,8 +201,17 @@ half2 MetallicGloss(float2 uv)
 
 #ifdef _METALLICGLOSSMAP
     mg.rg = tex2D(metallicRoughnessTexture, uv).bg;
+
+    mg.r = pow(saturate(mg.r), 2.2);
     mg.r *= metallicFactor;
-    mg.g = 1-(mg.g*roughnessFactor);
+
+    mg.g = pow(saturate(mg.g), 2.2);
+    if (mg.g < 0.0001)
+        mg.g = 1-sqrt(roughnessFactor);
+    else
+    {
+        mg.g = 1-sqrt(mg.g*roughnessFactor);
+    }
 #else
     mg.r = metallicFactor;
     mg.g = 1-roughnessFactor;

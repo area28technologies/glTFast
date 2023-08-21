@@ -53,6 +53,7 @@ using UnityEditor;
 #endif
 using UnityEngine.Assertions;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 using UnityEngine.Profiling;
 using UnityEngine;
 
@@ -2288,6 +2289,7 @@ namespace GLTFast
 
                 if (node.mesh >= 0)
                 {
+                    Mesh meshData = m_GltfRoot.meshes[node.mesh];
                     var end = m_MeshPrimitiveIndex[node.mesh + 1];
                     var primitiveCount = 0;
                     for (var i = m_MeshPrimitiveIndex[node.mesh]; i < end; i++)
@@ -2333,6 +2335,7 @@ namespace GLTFast
                                 primitiveName,
                                 mesh,
                                 primitive.materialIndices,
+                                meshData.extras.shadowData,
                                 joints,
                                 rootJoint,
                                 gltf.meshes[node.mesh].weights,
@@ -2378,6 +2381,7 @@ namespace GLTFast
                                 positions,
                                 rotations,
                                 scales,
+                                meshData.extras.shadowData,
                                 primitiveCount
                             );
                         }
@@ -2408,7 +2412,28 @@ namespace GLTFast
                 Profiler.EndSample();
             }
 
+            void ImportLightSettings(Scene scene)
+            {
+                Scene.LightSettings lightSettings = scene.extras.lightSettings;
+                RenderSettings.ambientMode = (AmbientMode)lightSettings.ambientMode;
+                switch (RenderSettings.ambientMode)
+                {
+                    case AmbientMode.Skybox:
+                        RenderSettings.ambientIntensity = lightSettings.intensityMultiplier;
+                        break;
+                    case AmbientMode.Flat:
+                        RenderSettings.ambientLight = lightSettings.ambientColour;
+                        break;
+                    case AmbientMode.Trilight:
+                        RenderSettings.ambientSkyColor = lightSettings.skyColour;
+                        RenderSettings.ambientEquatorColor = lightSettings.equatorColour;
+                        RenderSettings.ambientGroundColor = lightSettings.groundColour;
+                        break;
+                }
+            }
+
             var scene = m_GltfRoot.scenes[sceneId];
+            ImportLightSettings(scene);
 
             instantiator.BeginScene(scene.name, scene.nodes);
 #if UNITY_ANIMATION

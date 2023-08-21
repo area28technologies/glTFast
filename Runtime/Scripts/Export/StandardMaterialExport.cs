@@ -13,9 +13,11 @@
 // limitations under the License.
 //
 
-using System;
-
+using System.IO;
 using Unity.Mathematics;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 
@@ -102,11 +104,8 @@ namespace GLTFast.Export
                         skyboxData.exposure = uMaterial.GetFloat("_Exposure");
                         skyboxData.rotation = uMaterial.GetFloat("_Rotation") + 90f;
 #if UNITY_EDITOR
-                        // Convert texture type to Texture2D
-                        string url = UnityEditor.AssetDatabase.GetAssetPath(uMaterial.GetTexture(k_Tex));
-                        Texture2D tex = new Texture2D(2, 2);
-                        tex.LoadImage(System.IO.File.ReadAllBytes(url));
-                        uMaterial.mainTexture = tex;
+                        uMaterial.mainTexture =
+                            ResizeTextureToImportSettings(uMaterial.GetTexture(k_Tex));
 #endif
                         ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
                         break;
@@ -115,6 +114,10 @@ namespace GLTFast.Export
                         skyboxData.skyTint = uMaterial.GetColor("_Tint");
                         skyboxData.exposure = uMaterial.GetFloat("_Exposure");
                         skyboxData.rotation = uMaterial.GetFloat("_Rotation");
+#if UNITY_EDITOR
+                        uMaterial.mainTexture =
+                            ResizeTextureToImportSettings(uMaterial.GetTexture(k_MainTex));
+#endif
                         ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
                         break;
                     case "Skybox/Procedural":
@@ -332,6 +335,34 @@ namespace GLTFast.Export
             }
 
             return success;
+        }
+
+        Texture2D ResizeTextureToImportSettings(UnityEngine.Texture texture)
+        {
+            Texture2D texture2d = new Texture2D(2, 2);
+#if UNITY_EDITOR
+            string texturePath = AssetDatabase.GetAssetPath(texture);
+            texture2d.LoadImage(File.ReadAllBytes(texturePath));
+            TextureImporter textureImporter =
+                (TextureImporter)AssetImporter.GetAtPath(texturePath);
+            int maxSize = textureImporter.maxTextureSize;
+            if (texture2d.width > maxSize || texture2d.height > maxSize)
+            {
+                int scale = Mathf.Max(texture2d.width / maxSize, texture2d.height / maxSize);
+                int width = texture2d.width / scale;
+                int height = texture2d.height / scale;
+
+                RenderTexture renderTexture = new RenderTexture(width, height, 32);
+                RenderTexture.active = renderTexture;
+                Graphics.Blit(texture2d, renderTexture);
+
+                texture2d.Reinitialize(width, height);
+                texture2d.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                texture2d.name = Path.GetFileNameWithoutExtension(texturePath);
+                texture2d.Apply();
+            }
+#endif
+            return texture2d;
         }
 
         int ExportTextureInfo(UnityEngine.Material material, string textureName, IGltfWritable gltf)

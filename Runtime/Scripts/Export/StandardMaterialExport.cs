@@ -356,7 +356,11 @@ namespace GLTFast.Export
                 RenderTexture.active = renderTexture;
                 Graphics.Blit(texture2d, renderTexture);
 
+#if UNITY_2021_3_OR_NEWER
                 texture2d.Reinitialize(width, height);
+#else
+                texture2d.Resize(width, height);
+#endif
                 texture2d.ReadPixels(new Rect(0, 0, width, height), 0, 0);
                 texture2d.name = Path.GetFileNameWithoutExtension(texturePath);
                 texture2d.Apply();

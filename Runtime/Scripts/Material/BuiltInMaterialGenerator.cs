@@ -90,6 +90,8 @@ namespace GLTFast.Materials
         static bool s_DefaultMaterialGenerated;
         static Material s_DefaultMaterial;
 
+        EnvironmentReflections reflections;
+
         /// <inheritdoc />
         protected override Material GenerateDefaultMaterial(bool pointsSupport = false)
         {
@@ -376,6 +378,15 @@ namespace GLTFast.Materials
                         return null;
                 }
                 RenderSettings.skybox = material;
+                if (reflections == null)
+                {
+                    GameObject reflectionsObject = new GameObject("EnvironmentReflections");
+                    reflections = reflectionsObject.AddComponent<EnvironmentReflections>();
+                }
+                else
+                {
+                    reflections.UpdateEnvironment();
+                }
             }
 
             if (gltfMaterial.extensions != null)

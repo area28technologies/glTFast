@@ -104,8 +104,18 @@ namespace GLTFast.Export
                         skyboxData.exposure = uMaterial.GetFloat("_Exposure");
                         skyboxData.rotation = uMaterial.GetFloat("_Rotation") + 90f;
 #if UNITY_EDITOR
-                        uMaterial.mainTexture =
-                            ResizeTextureToImportSettings(uMaterial.GetTexture(k_Tex));
+                        UnityEngine.Texture texture = uMaterial.GetTexture(k_Tex);
+                        string texturePath = AssetDatabase.GetAssetPath(texture);
+                        string extension = Path.GetExtension(texturePath).ToLower();
+                        if (extension == ".tif" || extension == ".tiff")
+                        {
+                            // convert to jpg
+                            string fileName = TextureUtils.ConvertTexture(texturePath, GLTFast.ImageFormat.Jpeg);
+                            Texture2D texture2d = AssetDatabase.LoadAssetAtPath<Texture2D>(fileName);
+                            texture2d.name = Path.GetFileNameWithoutExtension(fileName);
+                            texture = texture2d;
+                        }
+                        uMaterial.mainTexture = ResizeTextureToImportSettings(texture);
 #endif
                         ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
                         break;
@@ -115,8 +125,18 @@ namespace GLTFast.Export
                         skyboxData.exposure = uMaterial.GetFloat("_Exposure");
                         skyboxData.rotation = uMaterial.GetFloat("_Rotation");
 #if UNITY_EDITOR
-                        uMaterial.mainTexture =
-                            ResizeTextureToImportSettings(uMaterial.GetTexture(k_MainTex));
+                        texture = uMaterial.GetTexture(k_MainTex);
+                        texturePath = AssetDatabase.GetAssetPath(texture);
+                        extension = Path.GetExtension(texturePath).ToLower();
+                        if (extension == ".tif" || extension == ".tiff")
+                        {
+                            // convert to jpg
+                            string fileName = TextureUtils.ConvertTexture(texturePath, GLTFast.ImageFormat.Jpeg);
+                            Texture2D texture2d = AssetDatabase.LoadAssetAtPath<Texture2D>(fileName);
+                            texture2d.name = Path.GetFileNameWithoutExtension(fileName);
+                            texture = texture2d;
+                        }
+                        uMaterial.mainTexture = ResizeTextureToImportSettings(texture);
 #endif
                         ExportUnlit(material, uMaterial, k_MainTex, gltf, logger);
                         break;
@@ -343,6 +363,7 @@ namespace GLTFast.Export
 #if UNITY_EDITOR
             string texturePath = AssetDatabase.GetAssetPath(texture);
             texture2d.LoadImage(File.ReadAllBytes(texturePath));
+            texture2d.name = Path.GetFileNameWithoutExtension(texturePath);
             TextureImporter textureImporter =
                 (TextureImporter)AssetImporter.GetAtPath(texturePath);
             int maxSize = textureImporter.maxTextureSize;
@@ -362,7 +383,6 @@ namespace GLTFast.Export
                 texture2d.Resize(width, height);
 #endif
                 texture2d.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-                texture2d.name = Path.GetFileNameWithoutExtension(texturePath);
                 texture2d.Apply();
             }
 #endif

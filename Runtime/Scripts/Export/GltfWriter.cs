@@ -406,8 +406,23 @@ namespace GLTFast.Export
                 groundColour = RenderSettings.ambientGroundColor,
                 ambientColour = RenderSettings.ambientLight
             };
-            Scene.Extras extras =
-                new Scene.Extras() { lightSettings = lightSettings };
+            string materialUri = "Temp/unityMaterials.zip";
+            Scene.UnityMaterials unityMaterials = new Scene.UnityMaterials();
+            if (m_Settings.Format == GltfFormat.Binary && File.Exists(materialUri))
+            {
+                int bufferViewIndex = AddFile(materialUri);
+                unityMaterials = new Scene.UnityMaterials()
+                {
+                    uri = materialUri,
+                    bufferView = bufferViewIndex
+                };
+            }
+
+            Scene.Extras extras = new Scene.Extras()
+            {
+                lightSettings = lightSettings,
+                unityMaterials = unityMaterials
+            };
 
             var scene = new Scene
             {
@@ -532,6 +547,17 @@ namespace GLTFast.Export
             m_Samplers.Add(new Sampler(filterMode, wrapModeU, wrapModeV));
             m_SamplerKeys.Add(samplerKey);
             return m_Samplers.Count - 1;
+        }
+
+        public int AddFile(string filePath)
+        {
+            byte[] data = File.ReadAllBytes(filePath);
+            return WriteBufferViewToBuffer(data);
+        }
+
+        public List<UnityEngine.Material> GetUnityMaterials()
+        {
+            return m_UnityMaterials;
         }
 
         /// <inheritdoc />

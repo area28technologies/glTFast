@@ -131,6 +131,8 @@ namespace GLTFast.Export
         /// <returns>glTF scene index</returns>
         uint AddScene(uint[] nodes, string name = null);
 
+        int AddFile(string filePath);
+
         /// <summary>
         /// Registers the use of a glTF extension
         /// </summary>

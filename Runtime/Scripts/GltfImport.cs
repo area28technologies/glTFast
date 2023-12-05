@@ -226,6 +226,7 @@ namespace GLTFast
 #if UNITY_ANIMATION
         AnimationClip[] m_AnimationClips;
 #endif
+        string unityMaterialPath;
 
 #if UNITY_EDITOR
         /// <summary>
@@ -284,7 +285,26 @@ namespace GLTFast
             m_MaterialGenerator = materialGenerator ?? MaterialGenerator.GetDefaultMaterialGenerator();
 
             m_Logger = logger;
+#if UNITY_EDITOR
+            EditorApplication.playModeStateChanged += CleanUpMaterials;
+#endif
         }
+
+#if UNITY_EDITOR
+        void CleanUpMaterials(PlayModeStateChange stateChange)
+        {
+            if (stateChange == PlayModeStateChange.EnteredEditMode && !EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                if (unityMaterialPath != null && Directory.Exists(unityMaterialPath))
+                {
+                    Directory.Delete(unityMaterialPath, true);
+                    File.Delete(unityMaterialPath + ".meta");
+                    AssetDatabase.Refresh();
+                    EditorApplication.playModeStateChanged -= CleanUpMaterials;
+                }
+            }
+        }
+#endif
 
         /// <summary>
         /// Sets the default <see cref="IDeferAgent"/> for subsequently
@@ -683,11 +703,22 @@ namespace GLTFast
         /// <inheritdoc />
         public UnityEngine.Material GetMaterial(int index = 0)
         {
+#if UNITY_MATERIALS_ENABLED
+#if UNITY_EDITOR
             if (m_Materials != null && index >= 0 && index < m_Materials.Length)
             {
-                return m_Materials[index];
+                string[] materialGuids = AssetDatabase.FindAssets(
+                    m_Materials[index].name, new[] { "Assets/UnityMaterials" });
+                if (materialGuids == null || materialGuids.Length == 0)
+                    return GraphicsSettings.currentRenderPipeline.defaultMaterial;
+                string materialPath = AssetDatabase.GUIDToAssetPath(materialGuids[0]);
+                return AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(materialPath);
             }
+#endif
             return null;
+#else
+            return m_Materials[index];
+#endif
         }
 
         /// <inheritdoc />
@@ -2713,6 +2744,31 @@ namespace GLTFast
         {
 
             Profiler.BeginSample("LoadAccessorData.Init");
+
+            if (m_GltfRoot.scenes.Length > 0)
+            {
+                Scene.UnityMaterials materials = m_GltfRoot.scenes[0].extras.unityMaterials;
+                BufferView materialBuffer = m_GltfRoot.bufferViews[materials.bufferView];
+                byte[] materialData = GetBufferView(materials.bufferView,
+                    materialBuffer.byteOffset, materialBuffer.byteLength).ToArray();
+
+                unityMaterialPath = Application.dataPath + "/UnityMaterials";
+                Directory.CreateDirectory(unityMaterialPath);
+
+                string zipPath = unityMaterialPath + "/unityMaterials.zip";
+                File.WriteAllBytes(zipPath, materialData);
+
+#if NET_STANDARD_2_1
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, unityMaterialPath, true);
+#else
+                if (Directory.Exists(unityMaterialPath))
+                    Directory.Delete(unityMaterialPath, true);
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, unityMaterialPath);
+#endif
+#if UNITY_EDITOR
+                AssetDatabase.Refresh();
+#endif
+            }
 
             var mainBufferTypes = new Dictionary<MeshPrimitive, MainBufferType>();
             var meshCount = gltf.meshes?.Length ?? 0;

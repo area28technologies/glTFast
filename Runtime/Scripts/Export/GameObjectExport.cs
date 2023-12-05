@@ -16,11 +16,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using GLTFast.Schema;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using Camera = UnityEngine.Camera;
+using CompressionLevel = System.IO.Compression.CompressionLevel;
 using Material = UnityEngine.Material;
 using Mesh = UnityEngine.Mesh;
 
@@ -87,6 +92,7 @@ namespace GLTFast.Export
                     rootNodes.Add((uint)nodeId);
                 }
             }
+            ExportUnityMaterials();
             if (rootNodes.Count > 0)
             {
                 m_Writer.AddScene(rootNodes.ToArray(), name);
@@ -105,6 +111,56 @@ namespace GLTFast.Export
             skyboxMaterial.name = "Skybox";
             m_Writer.AddMaterial(
                 skyboxMaterial, out int skyboxMaterialId, m_MaterialExport);
+        }
+
+        void ExportUnityMaterials()
+        {
+            List<Material> materials = m_Writer.GetUnityMaterials();
+            if (materials == null || materials.Count == 0)
+                return;
+
+            string exportPath = Path.Combine(
+                Path.GetDirectoryName(Application.dataPath),
+                "Temp",
+                "unityMaterials.zip");
+
+            using (FileStream fileStream = File.Open(exportPath, FileMode.Create))
+            {
+                using (ZipArchive archive = new ZipArchive(fileStream, ZipArchiveMode.Create))
+                {
+                    foreach (Material material in materials)
+                    {
+                        AddAssetToArchive(archive, material);
+
+                        Shader shader = material.shader;
+                        AddAssetToArchive(archive, shader);
+
+                        string[] textureNames = material.GetTexturePropertyNames();
+                        foreach (string textureName in textureNames)
+                        {
+                            if (material.HasProperty(textureName))
+                            {
+                                UnityEngine.Texture texture = material.GetTexture(textureName);
+                                if (texture != null)
+                                    AddAssetToArchive(archive, texture);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void AddAssetToArchive(ZipArchive archive, UnityEngine.Object asset)
+        {
+#if UNITY_EDITOR
+            string path = AssetDatabase.GetAssetPath(asset);
+            if (path.Contains("Packages/com.unity.render-pipelines") ||
+                path.Contains("Resources/unity_builtin_extra"))
+                return; // built-in shader/material would clash with existing ones
+            archive.CreateEntryFromFile(path, path, CompressionLevel.Optimal);
+            string metaPath = path + ".meta";
+            archive.CreateEntryFromFile(metaPath, metaPath, CompressionLevel.Optimal);
+#endif
         }
 
         /// <summary>

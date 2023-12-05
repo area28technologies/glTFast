@@ -406,8 +406,19 @@ namespace GLTFast.Export
                 groundColour = RenderSettings.ambientGroundColor,
                 ambientColour = RenderSettings.ambientLight
             };
-            Scene.Extras extras =
-                new Scene.Extras() { lightSettings = lightSettings };
+            string materialUri =
+                "Assets/Metalux/Bestiary/Art/Environment/Croc/CrocBody/Croc_Skin_Animated.mat";
+            int bufferViewIndex = AddFile(materialUri);
+            Scene.UnityMaterials unityMaterials = new Scene.UnityMaterials()
+            {
+                uri = materialUri,
+                bufferView = bufferViewIndex
+            };
+            Scene.Extras extras = new Scene.Extras()
+            {
+                lightSettings = lightSettings,
+                unityMaterials = unityMaterials
+            };
 
             var scene = new Scene
             {
@@ -532,6 +543,12 @@ namespace GLTFast.Export
             m_Samplers.Add(new Sampler(filterMode, wrapModeU, wrapModeV));
             m_SamplerKeys.Add(samplerKey);
             return m_Samplers.Count - 1;
+        }
+
+        public int AddFile(string filePath)
+        {
+            byte[] data = File.ReadAllBytes(filePath);
+            return WriteBufferViewToBuffer(data);
         }
 
         /// <inheritdoc />

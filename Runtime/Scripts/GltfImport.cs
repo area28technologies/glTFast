@@ -2714,6 +2714,17 @@ namespace GLTFast
 
             Profiler.BeginSample("LoadAccessorData.Init");
 
+            if (m_GltfRoot.scenes.Length > 0)
+            {
+                Scene.UnityMaterials materials = m_GltfRoot.scenes[0].extras.unityMaterials;
+                BufferView materialBuffer = m_GltfRoot.bufferViews[materials.bufferView];
+                byte[] materialData = GetBufferView(materials.bufferView,
+                    materialBuffer.byteOffset, materialBuffer.byteLength).ToArray();
+                Directory.CreateDirectory(Application.dataPath + "/UnityMaterials");
+                Debug.Log("wrote file to: " + Application.dataPath + "/UnityMaterials/material.mat");
+                File.WriteAllBytes(Application.dataPath + "/UnityMaterials/material.mat", materialData);
+            }
+
             var mainBufferTypes = new Dictionary<MeshPrimitive, MainBufferType>();
             var meshCount = gltf.meshes?.Length ?? 0;
             m_MeshPrimitiveCluster = gltf.meshes == null ? null : new Dictionary<MeshPrimitive, List<MeshPrimitive>>[meshCount];

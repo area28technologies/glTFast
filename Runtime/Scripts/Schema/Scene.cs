@@ -36,6 +36,7 @@ namespace GLTFast.Schema
         public struct Extras
         {
             public LightSettings lightSettings;
+            public UnityMaterials unityMaterials;
 
             public override string ToString()
             {
@@ -52,6 +53,13 @@ namespace GLTFast.Schema
             public Vector4 equatorColour;
             public Vector4 groundColour;
             public Vector4 ambientColour;
+        }
+
+        [System.Serializable]
+        public struct UnityMaterials
+        {
+            public string uri;
+            public int bufferView;
         }
 
         internal void GltfSerialize(JsonWriter writer)

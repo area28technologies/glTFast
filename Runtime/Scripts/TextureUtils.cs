@@ -1,12 +1,15 @@
 using System.IO;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 namespace GLTFast
 {
     static class TextureUtils
     {
+#if UNITY_EDITOR
         internal static string ConvertTexture(string texturePath, ImageFormat format)
         {
             string extension = format == ImageFormat.Jpeg ? ".jpg" : ".png";
@@ -41,6 +44,6 @@ namespace GLTFast
                 return texture.EncodeToPNG();
             return null;
         }
-
+#endif
     }
 }
